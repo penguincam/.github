@@ -14,7 +14,7 @@ mutation-test:
 # Check the README files here against the README rule.
 readme-check:
     bash githooks/readme-check.sh README.md
-    bash githooks/readme-check.sh profile/README.md
+    bash githooks/readme-check.sh --profile profile/README.md
 
 # Lint the shell scripts with shellcheck.
 lint:

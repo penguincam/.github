@@ -232,6 +232,12 @@ Check a README with:
 
     bash .githooks/readme-check.sh README.md
 
+The organization profile page, `profile/README.md` in the `.github`
+repository, may leave out the title and any section. The sections it has keep
+the order above, and every other rule holds. Check it with:
+
+    bash githooks/readme-check.sh --profile profile/README.md
+
 The pre-commit hook runs the same check when README.md is staged. It cannot
 spot a person's name or a host name, so the owner checks those in review.
 
