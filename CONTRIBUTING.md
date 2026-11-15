@@ -13,6 +13,7 @@ You need these on your machine:
 | `gh`, signed in with `gh auth login` | Forks, syncs and pull requests. |
 | `just` | Each repository's recipes. A repository with a Nix devshell provides it through `nix develop`. |
 | A signing key on your GitHub account | Every commit is signed. See "Set up commit signing". |
+| `user.name` and `user.email` set in git | Every commit is signed off with them. See "Sign off every commit". |
 
 Some repositories are private. The owner grants read access to each person
 who works on one. Read access lets you fork it.
@@ -58,6 +59,7 @@ release. Open every pull request against `dev`, never against `main`.
   `perf`, `refactor`, `revert`, `style` and `test`.
 - Every commit is signed with a key on your GitHub account. GitHub must show
   it as verified.
+- Every commit carries a `Signed-off-by:` line. See "Sign off every commit".
 - Commit as yourself. Add no AI attribution anywhere. That means no
   `Co-Authored-By` trailer for an AI, no tool prefix in a title and no
   "generated with" line in a commit, a pull request or a comment.
@@ -88,6 +90,32 @@ Check it in a throwaway repository:
 A GPG key also works. Upload it under GPG keys and set `gpg.format` to
 `openpgp`.
 
+## Sign off every commit
+
+Every commit carries a `Signed-off-by:` line with your name and address.
+The sign-off certifies the
+[Developer Certificate of Origin](https://developercertificate.org/): you
+wrote the change, or you have the right to submit it under the license the
+repository names. You also state that the contribution is public, or shared
+with the people who hold access to the repository. A record of it and of
+your sign-off is kept.
+
+One command signs the commit and signs it off:
+
+    git commit -S -s -m "feat(scope): summary"
+
+`-S` signs with your key. `-s` adds `Signed-off-by: Your Name <your address>`
+from `user.name` and `user.email`. With `commit.gpgsign` set to true, `-S`
+is already the default, and `git commit -s` does both.
+
+The hooks check only that a `Signed-off-by:` line is present. Review checks
+whose it is.
+
+To sign off the last commit, or every commit since a base:
+
+    git commit --amend -S -s --no-edit
+    git rebase --force-rebase --signoff --gpg-sign <base>
+
 ## Install the hooks
 
 Every repository carries the same git hooks in `.githooks/`. Install them
@@ -106,15 +134,20 @@ The hooks refuse these:
 | Hook | Refuses |
 |---|---|
 | `commit-msg` | AI attribution in the message. |
+| `commit-msg` | A message with no `Signed-off-by:` line. |
 | `pre-push` | A push to any `penguincam` remote. |
 | `pre-push` | An unsigned commit in the pushed range. Merge commits made by GitHub are exempt. |
+| `pre-push` | A commit with no `Signed-off-by:` line in the pushed range. Merge commits made by GitHub are exempt. |
 | `pre-push` | AI attribution in any pushed commit. |
 | `pre-push` | An agent file in any pushed commit or in the pushed tree. See "Agent files". |
 
 The pushed range is every commit the destination remote does not hold yet.
+In a fork of another project, run `gh repo sync` and `git fetch origin`
+first. Then your fork holds the upstream history, so the hooks skip it. If a
+refusal lists upstream commits, sync and fetch. Do not rebase them.
 The owner, who alone can write to the organization, sets
 `PENGUINCAM_HOOKS_ALLOW_ORG_PUSH=1` for a push there. That lifts only the
-first refusal in the table.
+refusal of a push to a `penguincam` remote.
 
 They warn about a branch name without a prefix, a subject that is not a
 conventional commit, an em dash, a staged agent file and a README that
@@ -156,7 +189,7 @@ place in the first:
     git switch --orphan agents-overlay
     cp -R ../<repo>-contrib/AGENTS.md ../<repo>-contrib/.claude .
     git add -f AGENTS.md .claude       # -f because .git/info/exclude lists them
-    git commit -m "chore(overlay): agent files"
+    git commit -s -m "chore(overlay): agent files"
     git push origin agents-overlay
     cd ../<repo>-contrib && git worktree remove ../<repo>-overlay
 

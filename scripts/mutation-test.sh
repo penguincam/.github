@@ -3,9 +3,12 @@
 #
 # For each refusal in the hooks and each finding in readme-check.sh, copy
 # githooks/ to a scratch directory, turn that one call into a no-op, and run
-# the copied test.sh. Every such copy must fail its test. The same is done
-# for the two agent file scans in pre-push and for the two parts of the
-# pushed range that keep held-elsewhere and overlay commits in the walk.
+# the copied test.sh. Every such copy must fail its test. That covers the
+# sign-off refusals in commit-msg and pre-push with the others. The same is
+# done for the two agent file scans in pre-push, for the two parts of the
+# pushed range that keep held-elsewhere and overlay commits in the walk, for
+# the GitHub merge exemption as each of the signature and sign-off rules
+# applies it, and for the address that a sign-off line must carry.
 # Exits 1 when any copy passes.
 set -euo pipefail
 
@@ -73,6 +76,15 @@ try_sub() {
 try_sub pre-push '"--remotes=$remote_name"' '--remotes' "range skips commits held by any remote"
 # shellcheck disable=SC2016
 try_sub pre-push '"--exclude=$remote_name/$PC_OVERLAY_BRANCH" ' '' "range skips the destination's overlay branch"
+# shellcheck disable=SC2016
+try_sub pre-push '[ "$signed" -eq 0 ] && [ "$github_merge" -eq 0 ]' '[ "$signed" -eq 0 ]' "signature rule ignores the GitHub merge exemption"
+# shellcheck disable=SC2016
+try_sub pre-push '[ "$signed_off" -eq 0 ] && [ "$github_merge" -eq 0 ]' '[ "$signed_off" -eq 0 ]' "sign-off rule ignores the GitHub merge exemption"
+# shellcheck disable=SC2016
+try_sub pre-push 'then signed_off=1; fi' 'then :; fi; signed_off=1' "sign-off check at push accepts any message"
+try_sub _lib.sh '<[^>[:space:]]+>' '.*' "sign-off line needs no address"
+# shellcheck disable=SC2016
+try_sub pre-push '[ "$parents" -gt 1 ] && ' '' "GitHub exemption covers single-parent commits"
 
 printf '\nmutation-test: %s killed, %s survived\n' "$killed" "$survived"
 [ "$survived" -eq 0 ]

@@ -14,6 +14,7 @@ needs hardware or keys you do not hold, say so and the owner will run it.
 
 - [ ] Opened from a branch on my fork into `dev` (CONTRIBUTING.md, "Fork first")
 - [ ] Every commit is signed and shows as verified
+- [ ] Every commit carries a Signed-off-by line (CONTRIBUTING.md, "Sign off every commit")
 - [ ] No AI attribution in commits, title, body or comments
 - [ ] No agent files in any commit (CONTRIBUTING.md, "Agent files")
 - [ ] A changed README still passes `bash .githooks/readme-check.sh README.md`
